@@ -1,0 +1,54 @@
+def pso(swarm_size, dim, max_iter, c1, c2, w):
+    # Initialization
+    positions = np.random.uniform(-5.12, 5.12, (swarm_size, dim))
+    velocities = np.random.uniform(-1, 1, (swarm_size, dim))
+    personal_best_positions = positions.copy()
+    personal_best_fitnesses = np.array([rastrigin(pos) for pos in positions])
+    global_best_position = personal_best_positions[np.argmin(personal_best_fitnesses)]
+    global_best_fitness = min(personal_best_fitnesses)
+    fitness_history = []
+
+    for iteration in range(max_iter):
+        # Update velocities
+        r1, r2 = np.random.rand(swarm_size, dim), np.random.rand(swarm_size, dim)
+        velocities = (w * velocities +
+                      c1 * r1 * (personal_best_positions - positions) +
+                      c2 * r2 * (global_best_position - positions))
+        
+        # Update positions
+        positions = positions + velocities
+        
+        # Evaluate fitness
+        fitnesses = np.array([rastrigin(pos) for pos in positions])
+        
+        # Update personal bests
+        for i in range(swarm_size):
+            if fitnesses[i] < personal_best_fitnesses[i]:
+                personal_best_fitnesses[i] = fitnesses[i]
+                personal_best_positions[i] = positions[i]
+        
+        # Update global best
+        if min(fitnesses) < global_best_fitness:
+            global_best_fitness = min(fitnesses)
+            global_best_position = positions[np.argmin(fitnesses)]
+        
+        fitness_history.append(global_best_fitness)
+    
+    return global_best_position, global_best_fitness, fitness_history
+
+# Parameters
+swarm_size = 50
+dim = 10
+max_iter = 100
+c1 = 1.5
+c2 = 1.5
+w = 0.5
+
+# Running PSO
+start_time = time.time()
+best_solution_pso, best_fitness_pso, fitness_history_pso = pso(swarm_size, dim, max_iter, c1, c2, w)
+end_time = time.time()
+
+print(f"PSO Best solution: {best_solution_pso}")
+print(f"PSO Best fitness: {best_fitness_pso}")
+print(f"PSO Computational time: {end_time - start_time} seconds")
