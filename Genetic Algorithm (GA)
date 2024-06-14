@@ -1,0 +1,65 @@
+import numpy as np
+import random
+import time
+
+def rastrigin(x):
+    return 10 * len(x) + sum([(xi**2 - 10 * np.cos(2 * np.pi * xi)) for xi in x])
+
+def initialize_population(pop_size, dim):
+    return [np.random.uniform(-5.12, 5.12, dim) for _ in range(pop_size)]
+
+def select_parents(population, fitnesses):
+    idx = np.random.choice(np.arange(len(population)), size=2, replace=False, p=fitnesses/fitnesses.sum())
+    return population[idx[0]], population[idx[1]]
+
+def crossover(parent1, parent2):
+    point = np.random.randint(1, len(parent1) - 1)
+    child1 = np.concatenate((parent1[:point], parent2[point:]))
+    child2 = np.concatenate((parent2[:point], parent1[point:]))
+    return child1, child2
+
+def mutate(individual, mutation_rate):
+    for i in range(len(individual)):
+        if np.random.rand() < mutation_rate:
+            individual[i] = np.random.uniform(-5.12, 5.12)
+    return individual
+
+def genetic_algorithm(pop_size, dim, max_generations, mutation_rate):
+    population = initialize_population(pop_size, dim)
+    best_solution = None
+    best_fitness = float('inf')
+    fitness_history = []
+    
+    for generation in range(max_generations):
+        fitnesses = np.array([1/(1 + rastrigin(ind)) for ind in population])
+        new_population = []
+        
+        for _ in range(pop_size // 2):
+            parent1, parent2 = select_parents(population, fitnesses)
+            child1, child2 = crossover(parent1, parent2)
+            new_population.extend([mutate(child1, mutation_rate), mutate(child2, mutation_rate)])
+        
+        population = new_population
+        best_generation_fitness = min([rastrigin(ind) for ind in population])
+        fitness_history.append(best_generation_fitness)
+        
+        if best_generation_fitness < best_fitness:
+            best_fitness = best_generation_fitness
+            best_solution = population[np.argmin([rastrigin(ind) for ind in population])]
+    
+    return best_solution, best_fitness, fitness_history
+
+# Parameters
+pop_size = 50
+dim = 10
+max_generations = 100
+mutation_rate = 0.01
+
+# Running GA
+start_time = time.time()
+best_solution_ga, best_fitness_ga, fitness_history_ga = genetic_algorithm(pop_size, dim, max_generations, mutation_rate)
+end_time = time.time()
+
+print(f"GA Best solution: {best_solution_ga}")
+print(f"GA Best fitness: {best_fitness_ga}")
+print(f"GA Computational time: {end_time - start_time} seconds")
